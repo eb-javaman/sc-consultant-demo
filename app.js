@@ -143,7 +143,8 @@ function sendChat(){
   inp.value='';
   if(!chatOpen)toggleChat();
   setTimeout(()=>{
-    msgs.innerHTML+=`<div style="align-self:flex-start;background:#f4f4f4;color:#333;border-radius:12px 12px 12px 2px;padding:8px 12px;font-size:12px;max-width:85%;line-height:1.4">Thanks for the context. I've noted this and can refine the diagnosis if you'd like — just ask.</div>`;
+    msgs.innerHTML+=`<div style="align-self:flex-start;background:#f4f4f4;color:#333;border-radius:12px 12px 12px 2px;padding:8px 12px;font-size:12px;max-width:85%;line-height:1.4">Thanks — that context helps clarify the fleet situation.
+Based on this information, I can refine the idle-time diagnosis and suggest more targeted dispatch improvements if you’d like.</div>`;
     msgs.scrollTop=msgs.scrollHeight;
   },600);
   msgs.scrollTop=msgs.scrollHeight;

@@ -1,13 +1,403 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SC Consultant Demo Assets</title>
+  <title>SC Consultant Demo</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<p>SC Consultant Demo Assets</p>
-<img src="./fleet.jpg" alt="SC Fleet" />
+<div id="app">
+  <!-- your UI HTML here -->
+  <div class="app">
+  <div class="topbar">
+    <span class="topbar-left">EarthBrain Platform</span>
+    <button class="topbar-btn" onclick="toggleAgent()">&#129504; Hide Agent</button>
+  </div>
+  <div class="main">
+    <div class="left-panel"></div>
+    <div class="right-panel" id="agent-panel">
+      <!-- SCREEN 1 -->
+      <div id="screen1" style="display:flex;flex-direction:column;height:100%">
+        <div class="panel-header">
+          <div style="display:flex;align-items:center">
+            <span class="panel-title">Smart Construction</span>
+            <span class="panel-sub">Agent</span>
+          </div>
+          <div class="tab-group">
+            <span class="tab active">New</span>
+            <span class="tab">Existing</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="badge-row"><span class="badge">AI Consultant · Beta</span></div>
+          <div class="screen-title">Smart Construction Agent</div>
+
+          <div class="section-card">
+            <div class="section-label">Who are you and what phase</div>
+            <div class="chip-label">Your role</div>
+            <div class="chips" id="role-chips">
+              <span class="chip" onclick="selectChip('role','PM',this)">PM</span>
+              <span class="chip" onclick="selectChip('role','Site Foreman',this)">Site Foreman</span>
+              <span class="chip" onclick="selectChip('role','Equipment Manager',this)">Equipment Manager</span>
+            </div>
+            <div style="margin-top:14px">
+              <div class="chip-label">Project phase</div>
+              <div class="chips" id="phase-chips">
+                <span class="chip" onclick="selectChip('phase','Pre-construction',this)">Pre-construction</span>
+                <span class="chip" onclick="selectChip('phase','Ongoing Construction',this)">Ongoing Construction</span>
+                <span class="chip" onclick="selectChip('phase','Inspection',this)">Inspection</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="goals-label">Select your primary goal</div>
+          <div id="goal-area">
+            <div class="goal-empty">Select your role and project phase above to see relevant goals</div>
+          </div>
+          <div class="divider">or describe your own</div>
+          <input class="custom-input" id="custom-goal" placeholder="e.g. Survey report arrives 1 week late, can't make timely decisions..." oninput="updateStartBtn()">
+        </div>
+        <div class="panel-footer">
+          <button class="btn-primary" id="start-btn" disabled onclick="goScreen2()">Start Consultation</button>
+          <div class="footer-note">Inputs used only for this consultation</div>
+        </div>
+      </div>
+
+      <!-- SCREEN 2 -->
+      <div id="screen2" style="display:none;flex-direction:column;height:100%">
+        <div class="panel-header">
+          <div style="display:flex;align-items:center">
+            <span class="panel-title">Smart Construction</span>
+            <span class="panel-sub">Agent</span>
+          </div>
+          <span class="back-btn" onclick="goScreen1()">&#8592; Back</span>
+        </div>
+        <div class="panel-body">
+          <div class="step-bar">
+            <div class="step"><div class="step-circle done">&#10003;</div><span class="step-name">Goal</span></div>
+            <div class="step-line done"></div>
+            <div class="step"><div class="step-circle active">2</div><span class="step-name active">Context</span></div>
+            <div class="step-line"></div>
+            <div class="step"><div class="step-circle">3</div><span class="step-name">Constraints</span></div>
+            <div class="step-line"></div>
+            <div class="step"><div class="step-circle">4</div><span class="step-name">Diagnosis</span></div>
+            <div class="step-line"></div>
+            <div class="step"><div class="step-circle">5</div><span class="step-name">Plan</span></div>
+          </div>
+
+          <div class="consultee-bar">
+            <span>Consultee:</span>
+            <span>&#128100; <span id="ctx-role-label">PM</span></span>
+            <span>&#127959; <span id="ctx-phase-label">Pre-construction</span></span>
+            <span>&#127919; <span id="ctx-goal-label">Validate cut/fill balance</span></span>
+          </div>
+
+          <div class="bot-msg">
+            <div class="bot-avatar">&#129504;</div>
+            <div class="bot-bubble">To give you a meaningful diagnosis for <strong id="ctx-goal-bubble">your goal</strong>, I need a bit more context. Answer what you can.</div>
+          </div>
+
+          <!-- PRE-REQUISITE QUESTION -->
+          <div class="ctx-section">
+            <div class="ctx-section-label" style="font-size:13px;font-weight:600;color:#333;text-transform:none;letter-spacing:0;margin-bottom:10px">What is the biggest problem on your site right now?</div>
+            <div class="chips">
+              <span class="chip" onclick="selectProblem('fuel',this)">Fuel and equipment</span>
+              <span class="chip" onclick="selectProblem('labor',this)">Labor</span>
+              <span class="chip" onclick="selectProblem('material',this)">Material waste</span>
+              <span class="chip" onclick="selectProblem('survey',this)">Survey delays</span>
+              <span class="chip" onclick="selectProblem('unknown',this)">Unknown</span>
+            </div>
+            <!-- insight message -->
+            <div id="problem-msg" style="display:none;margin-top:12px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;border-left:3px solid var(--brand);background:var(--brand-light);color:#333"></div>
+          </div>
+
+          <!-- SECTIONS LOCKED UNTIL PROBLEM SELECTED -->
+          <div id="ctx-locked" style="opacity:.35;pointer-events:none;transition:opacity .3s">
+            <div class="ctx-section">
+              <div class="ctx-section-label">Region</div>
+              <div class="chips">
+                <span class="chip" onclick="selectCtx('region','japan',this)">Japan</span>
+                <span class="chip" onclick="selectCtx('region','middle_east',this)">Middle East</span>
+                <span class="chip" onclick="selectCtx('region','sea',this)">Southeast Asia</span>
+                <span class="chip" onclick="selectCtx('region','other',this)">Other / Global</span>
+              </div>
+            </div>
+            <div class="ctx-section">
+              <div class="ctx-section-label">Project type</div>
+              <div class="chips">
+                <span class="chip" onclick="selectCtx('ptype','road',this)">Road / Highway</span>
+                <span class="chip" onclick="selectCtx('ptype','earthwork',this)">Earthwork / Dam</span>
+                <span class="chip" onclick="selectCtx('ptype','building',this)">Building / Structure</span>
+                <span class="chip" onclick="selectCtx('ptype','mixed',this)">Mixed / Other</span>
+              </div>
+            </div>
+            <div class="ctx-section">
+              <div class="ctx-section-label">Project size</div>
+              <div class="chips">
+                <span class="chip" onclick="selectCtx('psize','small',this)">Small — under 20 people</span>
+                <span class="chip" onclick="selectCtx('psize','medium',this)">Medium — 20 to 100 people</span>
+                <span class="chip" onclick="selectCtx('psize','large',this)">Large — over 100 people</span>
+              </div>
+            </div>
+            <div class="ctx-section">
+              <div class="ctx-section-label">Estimated equipment idle rate</div>
+              <div class="chips">
+                <span class="chip" onclick="selectCtx('idle','under10',this)">Under 10%</span>
+                <span class="chip" onclick="selectCtx('idle','10to25',this)">10–25%</span>
+                <span class="chip" onclick="selectCtx('idle','over25',this)">Over 25%</span>
+              </div>
+            </div>
+            <div class="ctx-section">
+              <div class="ctx-section-label">Where do trucks wait most often?</div>
+              <div class="chips">
+                <span class="chip" onclick="selectCtx('truckwait','loading',this)">Loading</span>
+                <span class="chip" onclick="selectCtx('truckwait','hauling',this)">Hauling</span>
+                <span class="chip" onclick="selectCtx('truckwait','dumping',this)">Dumping</span>
+                <span class="chip" onclick="selectCtx('truckwait','varies',this)">Varies</span>
+              </div>
+            </div>
+            <div class="ctx-section">
+              <div class="ctx-section-label">How are trucks dispatched today?</div>
+              <div class="chips">
+                <span class="chip" onclick="selectCtx('dispatch','central',this)">Centralized dispatch</span>
+                <span class="chip" onclick="selectCtx('dispatch','radio',this)">Radio coordination</span>
+                <span class="chip" onclick="selectCtx('dispatch','none',this)">No formal process</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ctx-section" style="margin-top:12px">
+            <div class="upload-zone">
+              <div class="upload-icon">&#128206;</div>
+              <div class="upload-title">Upload site plan or progress report</div>
+              <div class="upload-sub">PDF or image — Optional, increases diagnosis confidence</div>
+              <button class="choose-btn">Choose file</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <button class="btn-primary" onclick="goScreen3()">Generate Diagnosis</button>
+        </div>
+      </div>
+
+      <!-- SCREEN 3 -->
+      <div id="screen3" style="display:none;flex-direction:column;height:100%;position:relative">
+        <div class="panel-header">
+          <div style="display:flex;align-items:center">
+            <span class="panel-title">Smart Construction</span>
+            <span class="panel-sub">Agent</span>
+          </div>
+          <span class="back-btn" id="s3-back">&#8592; Back</span>
+        </div>
+        <div class="panel-body">
+          <div class="step-bar">
+            <div class="step"><div class="step-circle done">&#10003;</div><span class="step-name">Goal</span></div>
+            <div class="step-line done"></div>
+            <div class="step"><div class="step-circle done">&#10003;</div><span class="step-name">Context</span></div>
+            <div class="step-line done"></div>
+            <div class="step"><div class="step-circle done">&#10003;</div><span class="step-name">Constraints</span></div>
+            <div class="step-line done"></div>
+            <div class="step"><div class="step-circle active">4</div><span class="step-name active">Diagnosis</span></div>
+            <div class="step-line"></div>
+            <div class="step"><div class="step-circle">5</div><span class="step-name">Plan</span></div>
+          </div>
+
+          <div class="diag-section">
+            <div class="diag-section-title">SC — Diagnosis</div>
+            <div class="diag-block" style="border-left:3px solid var(--brand);background:#fafafa">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+                <div>
+                  <div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">True constraint</div>
+                  <div class="diag-block-title" style="font-size:15px;margin-bottom:0">Fleet coordination failure</div>
+                </div>
+                <span class="severity sev-high" style="font-size:11px;padding:3px 10px">Confidence: High</span>
+              </div>
+              <div style="font-size:12px;color:#444;line-height:1.6;margin-bottom:10px">
+                Your cost overrun is not primarily a budgeting issue.<br>
+                Signals show over 25% equipment idle time with no formal dispatch process, meaning machines spend significant time waiting rather than moving material.
+              </div>
+              <div style="font-size:12px;color:#555;margin-bottom:12px">This leads to:</div>
+              <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#444"><span style="width:6px;height:6px;border-radius:50%;background:var(--brand);flex-shrink:0;display:inline-block"></span>Higher fuel consumption</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#444"><span style="width:6px;height:6px;border-radius:50%;background:var(--brand);flex-shrink:0;display:inline-block"></span>Wasted machine hours</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#444"><span style="width:6px;height:6px;border-radius:50%;background:var(--brand);flex-shrink:0;display:inline-block"></span>Slower earthwork progress</div>
+              </div>
+              <div style="border-top:1px solid #eee;padding-top:12px">
+                <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Agent reasoning</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="font-size:12px;color:#333"><span style="color:var(--brand);font-weight:600">Primary cause</span><br><span style="color:#666;padding-left:12px;display:block">→ Lack of structured dispatch</span></div>
+                  <div style="font-size:12px;color:#333"><span style="color:#555;font-weight:600">Secondary cause</span><br><span style="color:#888;padding-left:12px;display:block">→ Poor visibility of fleet activity</span></div>
+                  <div style="font-size:12px;color:#333"><span style="color:#888;font-weight:600">Tertiary cause</span><br><span style="color:#aaa;padding-left:12px;display:block">→ Unoptimized fleet mix and haul paths</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="diag-section">
+            <div class="diag-section-title">Recommended actions</div>
+            <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">This week (quick wins)</div>
+            <div class="stepper">
+              <div class="stepper-item" id="sitem-1">
+                <div class="stepper-left">
+                  <div class="stepper-dot active" onclick="toggleStep(1)">1</div>
+                  <div class="stepper-line"></div>
+                </div>
+                <div class="stepper-content">
+                  <div class="stepper-header" onclick="toggleStep(1)">
+                    <div><div class="stepper-title">Track idle time per machine</div><div class="stepper-sub">Fleet monitoring · Data capture</div></div>
+                    <span class="stepper-chevron open" id="schev-1">&#8964;</span>
+                  </div>
+                  <div class="stepper-body" id="sbody-1">
+                    <div class="stepper-desc">Start logging when each machine is active vs waiting. Even manual tracking for 3 days reveals the biggest idle windows.</div>
+                    <button class="tutorial-btn">&#9654; See complete guidance</button>
+                  </div>
+                </div>
+              </div>
+              <div class="stepper-item" id="sitem-2">
+                <div class="stepper-left">
+                  <div class="stepper-dot" onclick="toggleStep(2)">2</div>
+                  <div class="stepper-line"></div>
+                </div>
+                <div class="stepper-content">
+                  <div class="stepper-header" onclick="toggleStep(2)">
+                    <div><div class="stepper-title">Hold daily dispatch planning meeting</div><div class="stepper-sub">Fleet coordination · Process</div></div>
+                    <span class="stepper-chevron" id="schev-2">&#8964;</span>
+                  </div>
+                  <div class="stepper-body" id="sbody-2" style="display:none">
+                    <div class="stepper-desc">A 15-minute morning session to assign machines to zones before work begins. Reduces ad-hoc decisions and waiting time on-site.</div>
+                    <button class="tutorial-btn">&#9654; See complete guidance</button>
+                  </div>
+                </div>
+              </div>
+              <div class="stepper-item" id="sitem-3">
+                <div class="stepper-left">
+                  <div class="stepper-dot" onclick="toggleStep(3)">3</div>
+                  <div class="stepper-line"></div>
+                </div>
+                <div class="stepper-content">
+                  <div class="stepper-header" onclick="toggleStep(3)">
+                    <div><div class="stepper-title">Identify top 3 causes of idle time</div><div class="stepper-sub">Root cause · Analysis</div></div>
+                    <span class="stepper-chevron" id="schev-3">&#8964;</span>
+                  </div>
+                  <div class="stepper-body" id="sbody-3" style="display:none">
+                    <div class="stepper-desc">Interview operators and foremen to pin down whether waiting happens at loading, hauling, or dumping — then focus fixes there first.</div>
+                    <button class="tutorial-btn">&#9654; See complete guidance</button>
+                  </div>
+                </div>
+              </div>
+              <div class="stepper-item last" id="sitem-4">
+                <div class="stepper-left">
+                  <div class="stepper-dot" onclick="toggleStep(4)">4</div>
+                </div>
+                <div class="stepper-content">
+                  <div class="stepper-header" onclick="toggleStep(4)">
+                    <div><div class="stepper-title">Pilot structured truck scheduling</div><div class="stepper-sub">Dispatch · Fleet management</div></div>
+                    <span class="stepper-chevron" id="schev-4">&#8964;</span>
+                  </div>
+                  <div class="stepper-body" id="sbody-4" style="display:none">
+                    <div class="stepper-desc">Run a 1-week pilot where trucks follow a pre-assigned sequence. Compare idle time before and after to quantify the impact.</div>
+                    <button class="tutorial-btn">&#9654; See complete guidance</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Impact estimate -->
+            <div style="margin-top:14px;border:1px solid #e5e5e5;border-radius:8px;padding:14px;background:#fafafa">
+              <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Impact estimate</div>
+              <div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:8px">Sites with:</div>
+              <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#444"><span style="width:6px;height:6px;border-radius:50%;background:#854F0B;flex-shrink:0;display:inline-block"></span>&gt;25% idle time</div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#444"><span style="width:6px;height:6px;border-radius:50%;background:#854F0B;flex-shrink:0;display:inline-block"></span>No formal dispatch</div>
+              </div>
+              <div style="font-size:12px;color:#555;margin-bottom:6px">typically achieve:</div>
+              <div style="font-size:22px;font-weight:700;color:var(--brand);margin-bottom:2px">12–20%</div>
+              <div style="font-size:12px;color:#555">reduction in idle hours after implementing structured fleet management.</div>
+            </div>
+          </div>
+
+          <div class="diag-section">
+            <div class="diag-section-title">Product recommendation</div>
+            <div class="rec-card">
+              <div class="carousel">
+                <div class="carousel-track" id="carousel-track">
+                  <div class="carousel-slide">
+                    <div class="slide-img" style="padding:0;overflow:hidden;position:relative">
+                      <img src="https://eb-javaman.github.io/sc-consultant-demo-assets/fleet.jpg" alt="SC Fleet demo" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:12px;color:#aaa;position:absolute;top:0;left:0">SC Fleet demo</div>
+                    </div>
+                    <div style="margin-top:10px">
+                      <div class="slide-title">SC Fleet</div>
+                      <div style="font-size:11px;color:var(--brand);font-weight:500;margin-bottom:6px">Digital dispatch planning board</div>
+                      <div class="slide-desc">Replaces informal scheduling with coordinated daily assignments.</div>
+                    </div>
+                  </div>
+                  <div class="carousel-slide">
+                    <div class="slide-img">SC Simulation screenshot</div>
+                    <div style="margin-top:10px">
+                      <div class="slide-title">SC Simulation</div>
+                      <div style="font-size:11px;color:var(--brand);font-weight:500;margin-bottom:6px">Scenario modeling for fleet mix and haul paths</div>
+                      <div class="slide-desc">Test operational changes before implementing on site.</div>
+                    </div>
+                  </div>
+                  <div class="carousel-slide">
+                    <div class="slide-img">SC Whiteboard screenshot</div>
+                    <div style="margin-top:10px">
+                      <div class="slide-title">SC Whiteboard</div>
+                      <div style="font-size:11px;color:var(--brand);font-weight:500;margin-bottom:6px">Digital patch planning board</div>
+                      <div class="slide-desc">Replaces informal scheduling with coordinated daily assignments.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="carousel-nav">
+                <button class="carousel-btn" onclick="prevSlide()">&#8592; Prev</button>
+                <button class="carousel-btn" onclick="nextSlide()">Next &#8594;</button>
+              </div>
+              <div class="carousel-dots" id="carousel-dots">
+                <div class="dot active" onclick="goSlide(0)"></div>
+                <div class="dot" onclick="goSlide(1)"></div>
+                <div class="dot" onclick="goSlide(2)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:180px"></div><!-- spacer for chatbot -->
+        </div>
+        <div class="panel-footer">
+          <button class="btn-primary">Export Report</button>
+        </div>
+
+        <!-- CHATBOT AGENT (fixed to bottom of right panel) -->
+        <div id="chatbot-panel" style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e0e0e0;border-radius:12px 12px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,.07);z-index:100;height:var(--chat-h,120px);display:flex;flex-direction:column;overflow:hidden">
+          <!-- drag handle -->
+          <div id="chat-handle" style="flex-shrink:0;padding:6px 0 4px;cursor:ns-resize;display:flex;flex-direction:column;align-items:center;gap:3px;user-select:none" onmousedown="startDrag(event)">
+            <div style="width:36px;height:4px;border-radius:2px;background:#d0d0d0"></div>
+          </div>
+          <!-- header row -->
+          <div style="display:flex;align-items:center;gap:8px;padding:0 14px 8px;flex-shrink:0">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">&#129504;</div>
+            <span style="font-size:13px;font-weight:600;color:#111">Refine with Agent</span>
+            <span style="background:var(--brand-light);color:var(--brand);font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px">Live</span>
+            <span id="chat-toggle" onclick="toggleChat()" style="margin-left:auto;font-size:11px;color:#888;cursor:pointer">&#8964;</span>
+          </div>
+          <!-- messages -->
+          <div id="chat-messages" style="flex:1;overflow-y:auto;padding:0 14px 8px;display:flex;flex-direction:column;gap:8px"></div>
+          <!-- input -->
+          <div style="padding:8px 14px 12px;flex-shrink:0;display:flex;gap:8px;align-items:center">
+            <input id="chat-input" class="custom-input" style="flex:1;margin:0" placeholder="Add more context or challenge the diagnosis..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button onclick="sendChat()" style="background:var(--brand);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="app.js"></script>
+
 </body>
 </html>
